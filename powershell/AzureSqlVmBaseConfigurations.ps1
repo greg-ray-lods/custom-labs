@@ -212,10 +212,3 @@ if ($ieFeatureStatus.State -eq "Enabled") {
     Write-Output "Disabling IE using Disable-WindowsOptionalFeature..."
     Disable-WindowsOptionalFeature -Online -FeatureName $ieFeature -Remove -NoRestart
 }
-
-# ===========================
-# Final Reboot to Apply Changes
-# ===========================
-Write-Output "Restarting the system to finalize Internet Explorer removal..."
-Restart-Computer -Force
-exit  # The VM will reboot, and Stage2.ps1 will run automatically via RunOnce.
