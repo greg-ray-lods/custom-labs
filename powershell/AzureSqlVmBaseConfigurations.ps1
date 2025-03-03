@@ -184,8 +184,18 @@ Write-Output "Server Manager will no longer launch at logon."
 # ===========================
 # Uninstall Internet Explorer
 # ===========================
-dism /online /Remove-Capability /CapabilityName:Browser.InternetExplorer~~~~0.0.11.0
-Write-Output "Internet Explorer uninstalled."
+Write-Output "Attempting to uninstall Internet Explorer..."
+
+# Try using both methods to ensure IE gets removed
+$ieFeature = "Internet-Explorer-Optional-amd64"
+
+# Remove via Windows Optional Features first
+$ieFeatureStatus = Get-WindowsOptionalFeature -Online | Where-Object { $_.FeatureName -eq $ieFeature }
+
+if ($ieFeatureStatus.State -eq "Enabled") {
+    Write-Output "Disabling IE using Disable-WindowsOptionalFeature..."
+    Disable-WindowsOptionalFeature -Online -FeatureName $ieFeature -NoRestart
+}
 
 # ===========================
 # Install .NET 4.8
