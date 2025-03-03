@@ -182,11 +182,27 @@ Set-ItemProperty -Path $registryPath -Name $registryName -Value 1 -Type DWord
 Write-Output "Server Manager will no longer launch at logon."
 
 # ===========================
+# Install .NET 4.8
+# ===========================
+Write-Output "Checking if .NET Framework 4.8 is installed..."
+
+$dotNet48Key = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
+$dotNet48Value = (Get-ItemProperty -Path $dotNet48Key -Name Release -ErrorAction SilentlyContinue).Release
+
+if ($dotNet48Value -lt 528040) {
+    Write-Output ".NET Framework 4.8 not detected. Installing via Chocolatey..."
+    choco install dotnetfx --version=4.8.0.20190930 -y
+    Write-Output ".NET Framework 4.8 installation complete."
+} 
+else {
+    Write-Output ".NET Framework 4.8 is already installed."
+}
+
+# ===========================
 # Uninstall Internet Explorer
 # ===========================
 Write-Output "Attempting to uninstall Internet Explorer..."
 
-# Try using both methods to ensure IE gets removed
 $ieFeature = "Internet-Explorer-Optional-amd64"
 
 # Remove via Windows Optional Features first
@@ -194,29 +210,12 @@ $ieFeatureStatus = Get-WindowsOptionalFeature -Online | Where-Object { $_.Featur
 
 if ($ieFeatureStatus.State -eq "Enabled") {
     Write-Output "Disabling IE using Disable-WindowsOptionalFeature..."
-    Disable-WindowsOptionalFeature -Online -FeatureName $ieFeature -NoRestart
+    Disable-WindowsOptionalFeature -Online -FeatureName $ieFeature -Remove -NoRestart
 }
 
 # ===========================
-# Install .NET 4.8
+# Final Reboot to Apply Changes
 # ===========================
-$dotNet48Key = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
-$dotNet48Value = (Get-ItemProperty -Path $dotNet48Key -Name Release -ErrorAction SilentlyContinue).Release
-
-if ($dotNet48Value -lt 528040) {
-    Write-Output ".NET Framework 4.8 not detected. Installing via Chocolatey..."
-    choco install dotnetfx --version=4.8.0.20190930 -y
-    Write-Output ".NET Framework 4.8 installation initiated. A reboot will be required."
-
-    # Force reboot to complete installation
-    Write-Output "Restarting the system to complete .NET installation..."
-    Restart-Computer -Force
-    exit  # The VM will reboot, then Stage2.ps1 will run automatically via RunOnce
-} 
-else {
-    Write-Output ".NET Framework 4.8 is already installed."
-    Write-Output "No reboot needed. Running Stage 2 script right now..."
-
-    # If .NET is already there, optionally run Stage 2 immediately:
-    & $stage2Path
-}
+Write-Output "Restarting the system to finalize Internet Explorer removal..."
+Restart-Computer -Force
+exit  # The VM will reboot, and Stage2.ps1 will run automatically via RunOnce.
