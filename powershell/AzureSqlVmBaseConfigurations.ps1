@@ -1,9 +1,9 @@
 # Ensure the Scripts folder exists
 New-Item -ItemType Directory -Path 'C:\Scripts' -Force | Out-Null
 
-################################################################################
-# STEP 1: CREATE THE STAGE 2 SCRIPT CONTENT AS A HERE-STRING
-################################################################################
+# ===========================
+# CREATE THE STAGE 2 SCRIPT THAT RUNS AFTER REBOOT
+# ===========================
 $part2Script = @'
 # --------------------------
 # BEGIN STAGE 2 SCRIPT
@@ -141,26 +141,24 @@ Write-Output "Stage 2 tasks completed."
 # --------------------------
 '@
 
-################################################################################
-# STEP 2: WRITE STAGE 2 SCRIPT TO DISK
-################################################################################
+# ===========================
+# WRITE STAGE 2 SCRIPT TO DISK
+# ===========================
 $stage2Path = "C:\Scripts\Stage2.ps1"
 Set-Content -Path $stage2Path -Value $part2Script -Force
 Write-Output "Stage 2 script written to $stage2Path."
 
-################################################################################
-# STEP 3: CREATE A RUNONCE ENTRY TO EXECUTE STAGE 2 AFTER REBOOT
-################################################################################
+# ===========================
+# CREATE A RUNONCE ENTRY TO EXECUTE STAGE 2 SCRIPT A SINGLE TIME AFTER FIRST REBOOT
+# ===========================
 $runOncePath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce'
 $partTwoCommand = "powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$stage2Path`""
 New-ItemProperty -Path $runOncePath -Name "PostDotNetInstall" -Value $partTwoCommand -PropertyType String -Force
 Write-Output "RunOnce entry created to execute Stage 2 script after reboot."
 
-################################################################################
-# STEP 4: INSTALL CHOCOLATEY + CHECK .NET 4.8
-################################################################################
-
-# Install Chocolatey if not present
+# ===========================
+# Install Chocolatey
+# ===========================
 if (!(Get-Command choco.exe -ErrorAction SilentlyContinue)) {
     Write-Output "Installing Chocolatey..."
     Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -183,7 +181,15 @@ if (-not (Test-Path $registryPath)) {
 Set-ItemProperty -Path $registryPath -Name $registryName -Value 1 -Type DWord
 Write-Output "Server Manager will no longer launch at logon."
 
-# Check if .NET 4.8 is installed
+# ===========================
+# Uninstall Internet Explorer
+# ===========================
+dism /online /Remove-Capability /CapabilityName:Browser.InternetExplorer~~~~0.0.11.0
+Write-Output "Internet Explorer uninstalled."
+
+# ===========================
+# Install .NET 4.8
+# ===========================
 $dotNet48Key = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
 $dotNet48Value = (Get-ItemProperty -Path $dotNet48Key -Name Release -ErrorAction SilentlyContinue).Release
 
