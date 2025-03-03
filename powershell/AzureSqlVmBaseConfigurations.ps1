@@ -210,5 +210,5 @@ $ieFeatureStatus = Get-WindowsOptionalFeature -Online | Where-Object { $_.Featur
 
 if ($ieFeatureStatus.State -eq "Enabled") {
     Write-Output "Disabling IE using Disable-WindowsOptionalFeature..."
-    Disable-WindowsOptionalFeature -Online -FeatureName $ieFeature -Remove -NoRestart
+    Disable-WindowsOptionalFeature -Online -FeatureName $ieFeature -Remove
 }
