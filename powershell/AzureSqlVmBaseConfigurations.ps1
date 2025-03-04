@@ -199,8 +199,6 @@ if ($dotNet48Value -lt 528040) {
 } 
 else {
     Write-Output ".NET Framework 4.8 is already installed."
-    Write-Output "No reboot needed. Running Stage 2 script right now..."
-
-    # If .NET is already there, optionally run Stage 2 immediately:
-    & $stage2Path
+    Restart-Computer -Force
+    exit  # The VM will reboot, then Stage2.ps1 will run automatically via RunOnce
 }
