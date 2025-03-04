@@ -191,14 +191,9 @@ if ($dotNet48Value -lt 528040) {
     Write-Output ".NET Framework 4.8 not detected. Installing via Chocolatey..."
     choco install dotnetfx --version=4.8.0.20190930 -y
     Write-Output ".NET Framework 4.8 installation initiated. A reboot will be required."
-
-    # Force reboot to complete installation
-    Write-Output "Restarting the system to complete .NET installation..."
-    Restart-Computer -Force
-    exit  # The VM will reboot, then Stage2.ps1 will run automatically via RunOnce
 } 
-else {
-    Write-Output ".NET Framework 4.8 is already installed."
-    Restart-Computer -Force
-    exit  # The VM will reboot, then Stage2.ps1 will run automatically via RunOnce
-}
+
+# Force reboot to complete installation
+Write-Output "Restarting the system to complete .NET installation..."
+Restart-Computer -Force
+exit  # The VM will reboot, then Stage2.ps1 will run automatically via RunOnce
